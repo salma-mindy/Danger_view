@@ -133,7 +133,7 @@ if(!isset($_SESSION["connecter"]) || $_SESSION["connecter"] !== true){
                             <div class="col-md-12 col-lg-12">
                                 <div class="card mb-4 mt-5">
                                     <div id="operat" class="mx-auto text-center align-item-center">
-                                        <img class="img-responsive rounded-circle" src="https://images.pexels.com/photos/220320/pexels-photo-220320.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" alt="Card image cap">
+                                        <img class="img-responsive rounded-circle" src="https://cdn.pixabay.com/photo/2013/07/13/10/07/man-156584_960_720.png" alt="Card image cap">
                                         <div class="text-center mt-1">
                                             <b><?php echo htmlspecialchars($_SESSION["prenom"]); ?></b> <br>
                                             <span><?php echo htmlspecialchars($_SESSION["email"]); ?></span> <br>
