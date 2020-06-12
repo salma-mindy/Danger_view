@@ -124,7 +124,9 @@ if(!isset($_SESSION["connecter"]) || $_SESSION["connecter"] !== true){
                                         Vos activités récentes
                                     </h6>
                                     <div class="card-body">
-                                        <p class="card-text"><i class="fa fa-times text-danger" aria-hidden="true"></i>&nbsp; <i>gygi</i></p>
+                                        <p class="card-text">
+                                            <!-- <i class="fa fa-times text-danger" aria-hidden="true"></i>&nbsp; -->
+                                            <i>Aucune activité</i></p>
                                     </div>
                                 </div>
                             </div>
