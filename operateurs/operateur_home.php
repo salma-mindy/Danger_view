@@ -1,5 +1,5 @@
 <?php
-// Initialize the session
+// Initialisation de la section
 session_start();
  
 // Vérifions si l'utilisateur est connecté, sinon redirigeons-le vers la page de connexion
