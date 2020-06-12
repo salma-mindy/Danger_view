@@ -7,149 +7,6 @@ if(!isset($_SESSION["connecter"]) || $_SESSION["connecter"] !== true){
     header("location: ../index.php");
     exit;
 }
-
-require_once "../php/db.php";
- 
-$nom = $prenom = $genre = $adresse = $contact = $email = $motDePasse = $confMotDePasse = "";
-$nom_err = $prenom_err = $genre_err = $adresse_err = $contact_err = $email_err = $motDePasse_err = $confMotDePasse_err = "";
-$errorMsg = "";
-
-if($_SERVER["REQUEST_METHOD"] == "POST"){
-    // validation du nom
-    if (empty($_POST["nom"])) {
-        $nom_err = "Le nom est obligatoire";
-      } else {
-        $nom = trim($_POST["nom"]);
-      }
-    // validation prenom
-      if (empty($_POST["prenom"])) {
-        $prenom_err = "Le prénom est obligatoire";
-      } else {
-        $prenom = trim($_POST["prenom"]);
-      }
-    // validation genre
-      if (empty($_POST["genre"])) {
-        $genre_err = "Le Genre est oblidatoire";
-      } else {
-        $genre = trim($_POST["genre"]);
-      }
-    
-    // validation lieu de residence
-      if (empty($_POST["adresse"])) {
-        $adresse_err = "Le Lieu de Résidence est oblidatoire";
-      } else {
-        $adresse = trim($_POST["adresse"]);
-      }
-    // validation Télephone
-    if (empty($_POST["contact"])) {
-        $contact_err = "Le Numéro de téléphone est oblidatoire";
-      } else {
-          $phone = trim($_POST["contact"]);
-          if(!preg_match("/^[0-9]{3}-[0-9]{4}-[0-9]{4}$/", $phone)){
-            $contact_err = "Numéro non valide.";
-          }else{
-            $contact = trim($_POST["contact"]);
-          }
-      }
-
-    // validation de email
-    if(empty(trim($_POST["email"]))){
-        $email_err = "Veuillez saisir un e-mail.";
-    } else{
-        $email = trim($_POST["email"]);
-
-        if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-            $email_err = "$email, n'est pas une adresse email valide";
-        }else{
-            $sql = "SELECT id FROM utilisateurs WHERE email = :email";
-        
-            if($stmt = $db->prepare($sql)){
-                $stmt->bindParam(":email", $param_email, PDO::PARAM_STR);
-                $param_email = trim($_POST["email"]);
-                if($stmt->execute()){
-                    if($stmt->rowCount() == 1){
-                        $email_err = "Cet e-mail est déjà associer à un compte.";
-                    } else{
-                        $email = trim($_POST["email"]);
-                    }
-                } else{
-                    $errorMsg = "Oops! Quelque chose a mal tourné. Veuillez réessayer plus tard.";
-                }
-                unset($stmt);
-            }
-        }
-    }
-    
-    // Validate mot de passe
-    if(empty(trim($_POST["motDePasse"]))){
-        $motDePasse_err = "Veuillez entrer un mot de passe.";     
-    } elseif(strlen(trim($_POST["motDePasse"])) < 6){
-        $motDePasse_err = "Le mot de passe doit contenir au moins 6 caractères.";
-    } else{
-        $motDePasse = trim($_POST["motDePasse"]);
-    }
-    
-    // Validate confirmation mot de passe
-    if(empty(trim($_POST["confMotDePasse"]))){
-        $confMotDePasse_err = "Veuillez confirmer le mot de passe.";     
-    } else{
-        $confMotDePasse = trim($_POST["confMotDePasse"]);
-        if(empty($confMotDePasse_err) && ($motDePasse != $confMotDePasse)){
-            $confMotDePasse_err = "Les mot de passe ne correspondent pas.";
-        }
-    }
-    
-    // Vérification des erreurs de saisie avant l'insertion dans la base de données
-    if(empty($nom_err) && 
-       empty($prenom_err) && 
-       empty($genre_err) && 
-       empty($adresse_err) &&
-       empty($contact_err) &&
-       empty($email_err) &&
-       empty($motDePasse_err) &&
-       empty($confMotDePasse_err)){
-        
-        // Préparons une instruction d'insertion
-        $sql = "INSERT INTO utilisateurs (nom, prenom, genre, adresse, contact, email, motDePasse, idRole) 
-                VALUES (:nom, :prenom, :genre, :adresse, :contact, :email, :motDePasse, 2)";
-         
-        if($stmt = $db->prepare($sql)){
-            // Bind variables to the prepared statement as parameters
-            $stmt->bindParam(":nom", $param_nom, PDO::PARAM_STR);
-            $stmt->bindParam(":prenom", $param_prenom, PDO::PARAM_STR);
-            $stmt->bindParam(":genre", $param_genre, PDO::PARAM_STR);
-            $stmt->bindParam(":adresse", $param_adresse, PDO::PARAM_STR);
-            $stmt->bindParam(":contact", $param_contact, PDO::PARAM_STR);
-            $stmt->bindParam(":email", $param_email, PDO::PARAM_STR);
-            $stmt->bindParam(":motDePasse", $param_motDePasse, PDO::PARAM_STR);
-            
-            // Set parameters
-            $param_nom = $nom;
-            $param_prenom = $prenom;
-            $param_genre = $genre;
-            $param_adresse = $adresse;
-            $param_contact = $contact;
-            $param_email = $email;
-            $param_motDePasse = password_hash($motDePasse, PASSWORD_DEFAULT); // Creates a password hash
-            
-            // Attempt to execute the prepared statement
-            if($stmt->execute()){
-                $nomOp = $_POST["nom"];
-                $emailOp = $_POST["email"];
-                $pass = $_POST["motDePasse"];
-                $errorMsg  = "Opérateur <b>$nomOp</b> ajouté avec succès. Ces identifiants de connexion sont : <br> <b>Email:</b> $emailOp <br> <b>Mot de passe (a changer avant 24h):</b> $pass";
-            } else{
-                $errorMsg = "Quelque chose a mal tourné. Veuillez réessayer.";
-            }
-
-            // Close statement
-            unset($stmt);
-        }
-    }
-    
-    // Close connection
-    unset($db);
-}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -253,11 +110,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
                 <!-- Contenue de la page -->
                 <div class="container-fluid">
-                    <?php if($errorMsg != ""): ?>
-                        <div class="alert alert-success" role="alert">
-                            <?php echo $errorMsg; ?>
-                        </div>
-                    <?php endif ?>
+                    
                     <div class="card mb-4">
                         <h5 class=" h4 card-header" style="background: #a19e9e !important">
                             <center>Ajout d'informations</center>
@@ -271,14 +124,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <h5 style="color: #ffc500">Informations générale</h5>
                 </div>
                 <hr>
-                <div class="form-group row <?php echo (!empty($genre_err) && !empty($adresse_err) && !empty($contact_err)) ? 'has-error' : ''; ?>"">
+                <div class="form-group row ">
                   <div class="col-sm-3 mb-3 mb-sm-0">
                     <input type="text" class="form-control form-control-user" id="numeroOrdre" name="numeroOrdre" placeholder="Numero d'ordre">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $genre_err; ?></i>
-                            </center>
+                           
                         </span>
                     </small>
                   </div>
@@ -286,9 +137,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="text" class="form-control form-control-user" id="source" name="source" placeholder="Veillez indiquez la Source">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $adresse_err; ?></i>
-                            </center>
+                            
                         </span>
                     </small> 
                  </div>
@@ -296,9 +145,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="text" class="form-control form-control-user" id="date" name="date" placeholder="Indiquez la date">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $contact_err; ?></i>
-                            </center>
+                          
                         </span>
                     </small>
                   </div>
@@ -310,14 +157,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <h5 style="color: #ffc500">Description du lieu</h5>
                 </div>
                 <hr>
-                <div class="form-group row <?php echo (!empty($genre_err) && !empty($adresse_err) && !empty($contact_err)) ? 'has-error' : ''; ?>"">
+                <div class="form-group row">
                   <div class="col-sm-4 mb-3 mb-sm-0">
                     <input type="text" class="form-control form-control-user" id="nomDuLieu" name="nomDuLieu" placeholder="Nom de l'endroit">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $genre_err; ?></i>
-                            </center>
+                            
                         </span>
                     </small>
                   </div>
@@ -325,9 +170,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="text" class="form-control form-control-user" id="description" name="description" placeholder="Décrivez l'endroit">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $adresse_err; ?></i>
-                            </center>
+                            
                         </span>
                     </small> 
                  </div>
@@ -335,21 +178,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="text" class="form-control form-control-user" id="date" name="date" placeholder="Indiquez la date">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $contact_err; ?></i>
-                            </center>
+                          
                         </span>
                     </small>
                   </div>
                 </div>
-                <div class="form-group row <?php echo (!empty($motDePasse_err) && !empty($confMotDePasse_err)) ? 'has-error' : ''; ?>"">
+                <div class="form-group row ">
                   <div class="col-sm-4 mb-3 mt-2 mb-sm-0">
                     <input type="password" class="form-control form-control-user" id="longitude" name="longitude" placeholder="Longitude">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $motDePasse_err; ?></i>
-                            </center>
+                           
                         </span>
                     </small>
                   </div>
@@ -357,9 +196,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="password" class="form-control form-control-user" id="latitude" name="latitude" placeholder="Latitude">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $confMotDePasse_err; ?></i>
-                            </center>
+                            
                         </span>
                     </small> 
                  </div>
@@ -367,9 +204,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="password" class="form-control form-control-user" id="ville" name="idVille" placeholder="Ville">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $confMotDePasse_err; ?></i>
-                            </center>
+                        
                         </span>
                     </small> 
                  </div>
@@ -378,14 +213,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <h5 style="color: #ffc500">Information sur les différents acteurs</h5>
                 </div>
                 <hr>
-                <div class="form-group row <?php echo (!empty($genre_err) && !empty($adresse_err) && !empty($contact_err)) ? 'has-error' : ''; ?>"">
+                <div class="form-group row ">
                   <div class="col-sm-4 mb-3 mb-sm-0">
                     <input type="text" class="form-control form-control-user" id="intitule" name="intitule" placeholder="Type d'acteur">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $genre_err; ?></i>
-                            </center>
+                            
                         </span>
                     </small>
                   </div>
@@ -393,9 +226,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="text" class="form-control form-control-user" id="description" name="description" placeholder="Décrivez l'endroit">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $adresse_err; ?></i>
-                            </center>
+                           
                         </span>
                     </small> 
                  </div>
@@ -403,9 +234,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <input type="text" class="form-control form-control-user" id="date" name="date" placeholder="Indiquez la date">
                     <small style="color: #ff1300 !important">
                         <span class="align-items-center text-center">
-                            <center>
-                            <i><?php echo $contact_err; ?></i>
-                            </center>
+                            
                         </span>
                     </small>
                   </div>
