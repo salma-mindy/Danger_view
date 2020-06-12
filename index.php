@@ -13,7 +13,7 @@ if(isset($_SESSION["connecter"]) && $_SESSION["connecter"] === true){
     }
     exit;
 }
- 
+ //ma base de donnée
 // Inclus notre composant d'accès à la base de donnée
 require_once "./php/db.php";
  
